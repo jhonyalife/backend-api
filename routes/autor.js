@@ -1,12 +1,14 @@
 const express = require("express");
 const autor = express.Router();
 const con = require('../db/db')
+const login = require('./login')
+require('dotenv').config();
 
 
-autor.get('/autor', (req,res) => {
+autor.get('/', (req, res) => {
   const sql = "SELECT * FROM tbAutor";
   con.query(sql, (err, result, fields) => {
-    if(err){
+    if (err) {
       throw err;
     }
     res.status(200).send(result)
@@ -14,23 +16,16 @@ autor.get('/autor', (req,res) => {
   })
 })
 
-autor.get("/autor/:id", (req, res) => {
-    const idAutor = req.params.id;
-    const sql =
-      "SELECT * FROM tbAutor INNER JOIN tbNacionalidade ON tbAutor.IdNacionalidade = TbNacionalidade.IdNacionalidade WHERE IdAutor = ?";
-    con.query(sql, [idAutor], (err, result, fields) => {
-      if (err) {
-        throw err;
-      }
-      if (result.length > 0) {
-        res.status(200).send(result);
-      } else {
-        res.status(404).send("Não encontrado");
-      }
-    });
+autor.get('/', login.verificarToken, (req, res) => {
+  con.query('SELECT * FROM tbAutor', (erroComandoSQL, result, fields) => {
+    if (erroComandoSQL) {
+      throw erroComandoSQL;
+    }
+    res.status(200).send(result);
   });
-  
-autor.delete("/autor/:id", (req, res) => {
+});
+
+autor.delete("/:id", (req, res) => {
   const idAutor = req.params.id;
   const sql = "DELETE FROM tbAutor WHERE IdAutor = ?";
 
@@ -45,8 +40,8 @@ autor.delete("/autor/:id", (req, res) => {
     }
   });
 });
-  
-autor.post("/autor", (req, res) => {
+
+autor.post("/", (req, res) => {
   const idautor = req.body.idautor;
   const noautor = req.body.noautor;
   const IdNacionalidade = req.body.idnacionalidade;
@@ -63,18 +58,18 @@ autor.post("/autor", (req, res) => {
     }
   });
 });
-  
-autor.put('/autor/:id', (req, res) => {
+
+autor.put('/:id', (req, res) => {
   const idautor = req.params.id;
   const noautor = req.body.noautor;
   const idnacionalidade = req.body.idnacionalidade;
 
   const sql = 'UPDATE tbAutor SET NoAutor = ?, IdNacionalidade = ? WHERE IdAutor = ?'
   con.query(sql, [noautor, idnacionalidade, idautor], (erroUpdate, result) => {
-    if(erroUpdate){
+    if (erroUpdate) {
       throw erroUpdate;
     }
-    if(result.affectedRows > 0){
+    if (result.affectedRows > 0) {
       res.status(200).send('Registro alterado com sucesso')
     } else {
       res.status(404).send('Registro não encontrado')
